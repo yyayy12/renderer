@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>CSVRenderer</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.23/esri/css/esri.css">
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+
+    <style>
+      html, body, #map {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background-color: #FFF;
+        overflow: hidden;
+        font-family: "Trebuchet MS";
+      }
+    </style>
+    <script src="https://js.arcgis.com/3.23/"></script>
+    <script>
+      var map, csv;
+
+      require([
+        "esri/map",
+        "esri/layers/CSVLayer",
+        "esri/Color",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/renderers/SimpleRenderer",
+        "esri/layers/FeatureLayer",
+        "esri/renderers/HeatmapRenderer",
+        "esri/InfoTemplate",
+        "esri/config"
+      ], function(
+        Map, CSVLayer,Color, SimpleMarkerSymbol, SimpleRenderer,FeatureLayer,HeatmapRenderer,InfoTemplate, esriConfig
+      ) {
+        
+        esriConfig.defaults.io.corsEnabledServers.push("yyayy12.github.io"); // supports CORS
+          
+        map = new Map("map", {
+          basemap: "gray",
+          center: [ -119.11, 36.65 ],
+          zoom: 5,
+          minZoom: 5,
+          maxZoom: 10 
+        });
+        
+          
+          $('#renderer1').click(function(){
+               if(csv!=null)  
+                        {  
+                             map.removeLayer(csv);  
+                        }
+             csv = new CSVLayer("https://yyayy12.github.io/renderer/all_month2.csv", {
+                  copyright: "USGS.gov"
+             });
+             var orangeRed = new Color([238, 69, 0, 0.5]); // hex is #ff4500
+             var marker = new SimpleMarkerSymbol("solid", 15, null, orangeRed);
+             var renderer = new SimpleRenderer(marker);
+             csv.setRenderer(renderer);
+             var template = new InfoTemplate("${type}", "${place}");//magNst
+             csv.setInfoTemplate(template); 
+             map.addLayer(csv);
+ 
+          });
+          
+          $('#renderer2').click(function(){
+              if(csv!=null)  
+                        {  
+                             map.removeLayer(csv);  
+                        }
+             
+              var infoContent = "<p>经度：${longitude}纬度：${latitude}的${place}地区，在${time}发生了${mag}级${magType}类型的地震，深度为${depth}"//infoContentDesc + infoContentDetails;
+              var infoTemplate = new InfoTemplate("Earthquake", infoContent);
+
+              var heatmapFeatureLayerOptions = {
+              mode: FeatureLayer.MODE_SNAPSHOT,
+              infoTemplate: infoTemplate,
+              outFields: [
+                "latitude",
+                "longitude",
+                "place",
+                "depth",
+                "mag",
+                "magType",
+                "time"
+               ]
+             };
+             csv = new CSVLayer("https://yyayy12.github.io/renderer/all_month2.csv", heatmapFeatureLayerOptions);
+             var heatmapRenderer = new HeatmapRenderer();
+             csv.setRenderer(heatmapRenderer);
+             map.addLayer(csv);
+ 
+          });
+          
+               var simpleJson = {
+                "type": "simple",
+                 "label": "",
+                 "description": "",
+                 "symbol": {
+                     "color": [210,105,30,191],
+                     "size": 10,
+                     "angle": 0,
+                     "xoffset": 0,
+                     "yoffset": 0,
+                     "type": "esriSLS" // esriSMS, esriSLS
+                 }
+             };            
+          
+      });
+        
+        
+    </script>
+  </head>
+
+  <body>
+      
+    <div id="visible" >
+        <input type="button" id="renderer1" value="csvRenderer1" />
+        <input type="button" id="renderer2" value="csvRenderer2" />
+        <input type="button" onclick="location.href='kml.html'" value="ToJsonrenderer" />
+    </div>
+    <div id="map"></div>
+
+  </body>
+</html>

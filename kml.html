@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>ShpRenderer</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.23/esri/css/esri.css">
+    <style>
+     html, body{
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+        #map{
+        height: 90%;
+        width: 100%;
+        margin: 0;
+        padding:0;}
+    </style>
+    <script src="https://js.arcgis.com/3.23/"></script>
+	<script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+    <script>
+      var map;
+      require([
+          "esri/map",   
+          "esri/layers/GraphicsLayer",  
+          "esri/symbols/SimpleMarkerSymbol",  
+          "esri/symbols/SimpleLineSymbol",  
+          "esri/symbols/SimpleFillSymbol", 
+          "esri/renderers/SimpleRenderer",
+          "esri/renderers/ClassBreaksRenderer",
+          "esri/renderers/UniqueValueRenderer",
+          "esri/Color",
+          "dojo/on",
+          "esri/geometry/Point",  
+          "esri/graphic",  
+          "dojo/domReady!"  ], 
+        function(Map,   
+            GraphicsLayer,  
+            SimpleMarkerSymbol,  
+            SimpleLineSymbol, 
+            SimpleFillSymbol, 			
+            SimpleRenderer,
+            ClassBreaksRenderer,
+            UniqueValueRenderer,
+            Color,on, Point, Graphic) {
+            map = new Map("map", {
+            basemap: "gray",
+            center: [119, 30],
+            zoom:4
+            });
+	
+		   
+            var gLayer = new GraphicsLayer(); 
+            var sLayer = new GraphicsLayer(); 
+          
+          $('#renderer1').click(function(){   	
+			  map.addLayer(gLayer); 
+                $.get("https://yyayy12.github.io/renderer/json3.json",null,function(result){  
+                    var features = result.features;  
+                    for(var i=0;i<features.length;i++){  
+                        var feature = features[i]; 
+                        var graphic  = new Graphic(feature);  
+                        gLayer.add(graphic);                    
+                    }
+             var symbol = new SimpleLineSymbol();
+             symbol.setColor(new Color([150, 150, 150, 0.5]));
+             var renderer = new ClassBreaksRenderer(symbol, "POPU");
+             renderer.addBreak(0, 1000, new SimpleFillSymbol().setColor(new Color([55, 0, 0,0.8])));
+             renderer.addBreak(1001, 4000, new SimpleFillSymbol().setColor(new Color([105, 0, 0, 0.8])));
+             renderer.addBreak(4001, 7000, new SimpleFillSymbol().setColor(new Color([155, 0, 0, 0.8])));
+             renderer.addBreak(7001, 10000, new SimpleFillSymbol().setColor(new Color([205,0, 0, 0.8])));
+             renderer.addBreak(10001, Infinity, new SimpleFillSymbol().setColor(new Color([255, 0, 0, 0.8])));
+             gLayer.setRenderer(renderer);
+             map.addLayer(gLayer); 
+            });
+
+       });//geoserver
+          
+          $('#renderer2').click(function(){
+               $.get("https://yyayy12.github.io/renderer/json3.json",null,function(result){  
+                    var features = result.features;  
+                    for(var i=0;i<features.length;i++){  
+                        var feature = features[i]; 
+                        var graphic  = new Graphic(feature);  
+                        gLayer.add(graphic); 
+                        sLayer.add(graphic);
+                    }
+                   
+                   var simpleJson = {
+                     "type": "simple",
+                     "symbol": {
+                     "color": [210,105,30,191],
+                     "size": 10,
+                     "angle": 0,
+                     "xoffset": 0,
+                     "yoffset": 0,
+                     "type": "esriSLS" // esriSMS, esriSLS
+                     }
+                  };
+                  var renderer2 = new SimpleRenderer(simpleJson);
+                  sLayer.setRenderer(renderer2);
+
+                   
+                   var defaultSym = new SimpleMarkerSymbol().setOutline(new SimpleLineSymbol().setWidth(0.3).setColor(new Color([128,128,128,0.5])));      
+                   var proColSym = new SimpleMarkerSymbol().setColor(new Color("#4daf4a")).setOutline(new SimpleLineSymbol().setWidth(0.3).setColor(new Color([128,128,128,0.5])));
+                   var munColSym = new SimpleMarkerSymbol().setColor(new Color("#984ea3")).setOutline(new SimpleLineSymbol().setWidth(0.3).setColor(new Color([128,128,128,0.5])));
+                   var autColSym = new SimpleMarkerSymbol().setColor(new Color("#574e4a")).setOutline(new SimpleLineSymbol().setWidth(0.3).setColor(new Color([128,128,128,0.5])));
+                   
+                   renderer1 = new UniqueValueRenderer(defaultSym, "ENGTYPE_1");
+                   renderer1.addValue({
+                     value: "Province",
+                     label: "省",
+                     symbol: proColSym
+                   });
+                   renderer1.addValue({
+                   value: "Municipality",
+                   label: "直辖市",
+                   symbol: munColSym
+                   });
+                   renderer1.addValue({
+                   value: "Autonomous Region",
+                   label: "自治区",
+                   symbol: autColSym
+                   });
+                   renderer1.setSizeInfo({
+                   field: "POPU",
+                   minSize: 8,
+                   maxSize: 20,
+                   minDataValue: 0,
+                   maxDataValue: 15000,
+                   valueUnit: "unknown"
+                   });
+                   gLayer.setRenderer(renderer1);
+                   
+             });
+                map.addLayer(sLayer);
+                map.addLayer(gLayer);
+         });     
+          
+    });  
+  </script>
+  </head>
+
+  <body>
+    <div id="visible" >
+        <input type="button" id="renderer1" value="jsonRenderer1" />
+        <input type="button" id="renderer2" value="jsonRenderer2" />
+        <input type="button" onclick="location.href='csv.html'" value="ToCSVrenderer" />
+    </div>
+    <div id="map"></div>
+   
+  </body>
+</html>
